@@ -5,15 +5,16 @@ services:
     build: .
     restart: always
     ports:
-      - 8080:8080
+      - "8080:8080"
     volumes:
       - evolution_instances:/evolution/instances
     networks:
       - evolution-net
     env_file:
       - .env
-    expose:
-      - 8080
+    depends_on:
+      - postgres
+      - redis
 
   frontend:
     container_name: evolution_frontend
@@ -24,10 +25,36 @@ services:
       - "3000:80"
     networks:
       - evolution-net
+    depends_on:
+      - api
+
+  postgres:
+    container_name: evolution_postgres
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: evolution
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - evolution_postgres_data:/var/lib/postgresql/data
+    networks:
+      - evolution-net
+
+  redis:
+    container_name: evolution_redis
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - evolution-net
 
 volumes:
   evolution_instances:
-
+  evolution_postgres_data:
 
 networks:
   evolution-net:
